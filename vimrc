@@ -50,7 +50,12 @@ function TabLabel(n)
 	" Append space
 	let label .= ' '
 	" Append the buffer name of the first window in that buffer
-	return label . bufname(bufnrlist[tabpagewinnr(a:n)[1]])
+	let path = fnamemodify(bufname(bufnrlist[tabpagewinnr(a:n)[1]]), ':p:.')
+	let length = len(path)
+	if length > 32
+		let path = path[length-32:length-1]
+	endif
+	return label . path
 endfunction
 set tabline=%!TabLine()
 
