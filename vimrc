@@ -8,8 +8,8 @@ let g:matchparen_timeout=50
 let g:matchparen_insert_timeout=50
 
 " Tabs
-set tabstop=4
-set shiftwidth=4
+set tabstop=8
+set shiftwidth=8
 set autoindent
 set noexpandtab
 " Tablabels, copied from vim :help setting-tabline and modified
