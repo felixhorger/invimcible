@@ -3,7 +3,7 @@ set nocp
 " Syntax
 syntax on
 set number
-colo HERE
+colo railcasts
 let g:matchparen_timeout=50
 let g:matchparen_insert_timeout=50
 
@@ -63,7 +63,7 @@ endfunction
 set tabline=%!TabLine()
 
 " Window
-let &winheight=16
+let &winheight=HERE
 set splitbelow
 set splitright
 
@@ -88,33 +88,49 @@ xmap <BS> <Plug>SlimeRegionSend
 nmap <BS> <Plug>SlimeParagraphSend
 nmap <Del> <Plug>SlimeLineSend
 "nmap <Tab> <Plug>SlimeSendCell
+"nmap <C-j> <C-w>w<C-b>[
+"nmap <C-k> i<C-w>:call term_sendkeys(bufnr('%'), "q")<CR><C-w>w<C-l>
 nmap <C-j> <C-w>w<C-w>N<C-u>
 nmap <C-k> i<C-w>w
 
 " Slime and Repl
 let g:repl = "HERE"
-let g:repl_localuser = "HERE"
-let g:repl_remoteuser = "HERE"
 let g:slime_target = "vimterminal"
 let g:slime_vimterminal_config = {"term_finish": "close"}
 let g:slime_no_mappings = 1
 command! -nargs=0 ReplNoClose let g:slime_vimterminal_config = {}
 command! -nargs=0 ReplDoClose let g:slime_vimterminal_config = {"term_finish": "close"}
 function ReplReplaceUser(path)
-	return substitute(a:path, "/home/" . g:repl_localuser, "/home/" . g:repl_remoteuser, "g")
+	let l:local = expand("$HOME")
+	let l:path = substitute(a:path, l:local, "$HOME", "g")
+	return l:path
 endfunction
 function ReplRemotePath()
 	let l:wd = getcwd()
-	" HERE any substitutions you need
-	return ReplReplaceUser(l:wd)
+	" HERE your own replaces
+	let l:wd = ReplReplaceUser(l:wd)
+	return l:wd
 endfunction
 function ConfigureRepl(...)
 	let w:server = get(w:, "server", "local")
 	if w:server == "local"
-		let g:slime_vimterminal_cmd = "sh -c \"" . g:repl . "\""
+		let g:slime_vimterminal_cmd = expand(g:repl)
 	else
 		if a:0 == 0
-			let g:slime_vimterminal_cmd = "ssh -XC " . w:server . " -t tmux new-session 'cd " . ReplRemotePath() . " && " . g:repl . "'"
+			let l:commands = [ "ssh -XC " . w:server . " -t bash -il -c '",
+				\ "vimrepl=0;",
+				\ "while [ `tmux has -t vimrepl$vimrepl 2>1; echo $?` -eq 0 ];",
+				\	"do let \"vimrepl=vimrepl+1\";",
+				\ "done;",
+				\ "vimrepl=vimrepl$vimrepl;",
+				\ "tmux new-session -d -s $vimrepl cd " . ReplRemotePath() . " && " . g:repl . ";",
+				\ "tmux set -t $vimrepl -as terminal-overrides \\',xterm-256color:smcup@:rmcup@\\';",
+				\ "tmux attach -t $vimrepl;'"
+			\]
+			let g:slime_vimterminal_cmd = join(l:commands, '')
+			"Debug if needed echo g:slime_vimterminal_cmd
+			" Without tmux
+			"let g:slime_vimterminal_cmd = "ssh -XC " . w:server . " -t bash -il -c 'cd " . ReplRemotePath() . " && " . g:repl . "'"
 		elseif a:0 == 1
 			let g:slime_vimterminal_cmd = "ssh -XC " . w:server . " -t tmux attach -t " . a:1
 		elseif a:0 > 1
@@ -125,6 +141,5 @@ endfunction
 
 command! -nargs=? Repl call ConfigureRepl(<f-args>) | SlimeConfig
 command! -nargs=0 Local let w:server = "local"
-command! -nargs=0 HERE let w:server = "HERE"
-"HERE more servers
+"Your own servers
 
