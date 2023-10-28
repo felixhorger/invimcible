@@ -123,12 +123,12 @@ function ConfigureRepl(...)
 				\	"do let \"vimrepl=vimrepl+1\";",
 				\ "done;",
 				\ "vimrepl=vimrepl$vimrepl;",
-				\ "tmux new-session -d -s $vimrepl cd " . ReplRemotePath() . " && " . g:repl . ";",
-				\ "tmux set -t $vimrepl -as terminal-overrides \\',xterm-256color:smcup@:rmcup@\\';",
+				\ "tmux new-session -d -s $vimrepl \\\"cd " . ReplRemotePath() . "; " . g:repl . "\\\";",
+				\ "tmux set -t $vimrepl -as terminal-overrides \',xterm-256color:smcup@:rmcup@\';",
 				\ "tmux attach -t $vimrepl;'"
 			\]
 			let g:slime_vimterminal_cmd = join(l:commands, '')
-			"Debug if needed echo g:slime_vimterminal_cmd
+			"echo g:slime_vimterminal_cmd
 			" Without tmux
 			"let g:slime_vimterminal_cmd = "ssh -XC " . w:server . " -t bash -il -c 'cd " . ReplRemotePath() . " && " . g:repl . "'"
 		elseif a:0 == 1
